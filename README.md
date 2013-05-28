@@ -33,7 +33,8 @@ ls: cannot access /dogs: No such file or directory
     
 ### Requirements
 
-`bernhard` - Python Riemann client (`python-bernhard` in apt)
+`bernhard` - Python Riemann client
+    requires python-protobuf
 
 ### Is it any good?
 sure 
