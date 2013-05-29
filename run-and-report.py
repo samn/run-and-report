@@ -54,6 +54,7 @@ if __name__ == "__main__":
     parser.add_option("--ttl", default=None, help="An optional TTL for the event")
     parser.add_option("--states", default="ok:0", help="Describes a mapping of return codes and event states.  e.g. ok:0,1|warn:2,3. Return codes without an explicit mapping are assumed error. default=ok:0")
     parser.add_option("--service", default=None, help="An optional service to the event. Defaults to the basename of the command that's run")
+    parser.add_option("--debug", default=False, action='store_true', help="Output the event before it's sent to Riemann.")
 
     options, command = parser.parse_args()
     if not command:
@@ -85,6 +86,9 @@ if __name__ == "__main__":
     riemann_event["attributes"] = {}
     riemann_event["attributes"]["return_code"] = proc.returncode
     riemann_event["attributes"]["command"] = command_str
+    
+    if options.debug:
+        print riemann_event
 
     riemann.send(riemann_event)
     exit(proc.returncode)
