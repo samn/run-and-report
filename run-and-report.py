@@ -37,7 +37,7 @@ def run_state(proc, state_table):
     return state_table.get(proc.returncode, "error")
 
 def run_command(command_str):
-    proc = subprocess.Popen(command_str, stdout=subprocess.PIPE, shell=True)
+    proc = subprocess.Popen(command_str, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     proc.wait()
     return proc
 
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     parser.add_option("--riemann-host", default="localhost", help="The address of Riemann")
     parser.add_option("--riemann-port", default=5555, help="The port Riemann is running on")
     parser.add_option("--tags", default=None, help="Optional tags for the event")
-    parser.add_option("--ttl", default=None, help="An optional TTL for the event")
+    parser.add_option("--ttl", default=None, help="An optional TTL for the event (in seconds)")
     parser.add_option("--states", default="ok:0", help="Describes a mapping of return codes and event states.  e.g. ok:0,1|warn:2,3. Return codes without an explicit mapping are assumed error. default=ok:0")
     parser.add_option("--service", default=None, help="An optional service to the event. Defaults to the basename of the command that's run")
     parser.add_option("--debug", default=False, action='store_true', help="Output the event before it's sent to Riemann.")
@@ -73,11 +73,21 @@ if __name__ == "__main__":
     if not service:
         service = command_name(command)
 
+    description = """
+    STDOUT >>>
+    %s
+    <<<
+
+    STDERR >>>
+    %s
+    <<<
+    """ % (proc.stdout.read(), proc.stderr.read())
+
     riemann = bernhard.Client(host=options.riemann_host, port=options.riemann_port, transport=bernhard.UDPTransport)
     riemann_event = {}
     riemann_event["service"] = service
     riemann_event["state"]  = run_state(proc, state_table)
-    riemann_event["description"] = proc.stdout.read()
+    riemann_event["description"] = description
     if options.ttl:
         riemann_event["ttl"] = int(options.ttl)
     riemann_event["host"]  = socket.gethostname()

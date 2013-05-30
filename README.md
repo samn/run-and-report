@@ -13,7 +13,7 @@ Options:
   --riemann-port=RIEMANN_PORT
                         The port Riemann is running on
   --tags=TAGS           Optional tags for the event
-  --ttl=TTL             An optional TTL for the event
+  --ttl=TTL             An optional TTL for the event (in seconds)
   --states=STATES       Describes a mapping of return codes and event states.
                         e.g. ok:0,1|warn:2,3. Return codes without an explicit
                         mapping are assumed error. default=ok:0
@@ -30,14 +30,12 @@ The states argument defines the state of the event based on the return code of t
 ### Examples
 ````
 samn@salmon:~ $ run-and-report.py --states "beauty:2,3|ok:0,1" --debug -- ls /dogs
-ls: cannot access /dogs: No such file or directory
-{'description': '', 'service': 'ls', 'tags': [], 'metric': 0.003847837448120117, 'state': 'beauty', 'host': 'salmon', 'attributes': {'command': 'ls /dogs', 'return_code': 2}}
+{'description': '\n    STDOUT >>>\n    \n    <<<\n\n    STDERR >>>\n    ls: cannot access /dogs: No such file or directory\n\n    <<<\n    ', 'service': 'ls', 'tags': [], 'metric': 0.0027740001678466797, 'state': 'beauty', 'host': 'salmon', 'attributes': {'command': 'ls /dogs', 'return_code': 2}}
 ````    
 
 ````
 samn@salmon:~ $ run-and-report.py --debug --service 'dogs are cool' --tags dogs,dogges -- 'echo 1 && ls /dogs || echo 2'
-ls: cannot access /dogs: No such file or directory
-{'description': '1\n2\n', 'service': 'dogs are cool', 'tags': ['dogs', 'dogges'], 'metric': 0.004781007766723633, 'state': 'ok', 'host': 'salmon', 'attributes': {'command': 'echo 1 && ls /dogs || echo 2', 'return_code': 0}}
+{'description': '\n    STDOUT >>>\n    1\n2\n\n    <<<\n\n    STDERR >>>\n    ls: cannot access /dogs: No such file or directory\n\n    <<<\n    ', 'service': 'dogs are cool', 'tags': ['dogs', 'dogges'], 'metric': 0.0026619434356689453, 'state': 'ok', 'host': 'salmon', 'attributes': {'command': 'echo 1 && ls /dogs || echo 2', 'return_code': 0}}
 ````
     
 ### Requirements
