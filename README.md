@@ -20,10 +20,11 @@ Options:
   --service=SERVICE     An optional service to the event. Defaults to the
                         basename of the command that's run
   --debug               Output the event before it's sent to Riemann.
+  --metric-from-stdout  Use stdout as the metric, rather than elapsed command walltime.
 ````
     
 `run-and-report.py` will run the command string and report that the event occurred.
-The time it took to run the command will be the metric of th event.
+The time it took to run the command will be the metric of the event, unless overridden by `--stdout`
 The states argument defines the state of the event based on the return code of the command.
     
 
