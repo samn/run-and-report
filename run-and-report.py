@@ -94,7 +94,7 @@ if __name__ == "__main__":
     if options.ttl:
         riemann_event["ttl"] = int(options.ttl)
     riemann_event["host"]  = socket.gethostname()
-    if options.stdout:
+    if options.metric_from_stdout:
         riemann_event["metric"] = float(stdout)
     else:
         riemann_event["metric"] = duration
