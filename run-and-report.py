@@ -7,6 +7,8 @@ import subprocess
 import sys
 import time
 
+DEFAULT_TAGS = ['run-and-report']
+
 def separate_from_commas(comma_str):
     """
     Takes a string of comma separated elements
@@ -98,11 +100,11 @@ if __name__ == "__main__":
         riemann_event["metric"] = float(stdout)
     else:
         riemann_event["metric"] = duration
-    riemann_event["tags"] = separate_from_commas(options.tags)
+    riemann_event["tags"] = DEFAULT_TAGS + separate_from_commas(options.tags)
     riemann_event["attributes"] = {}
     riemann_event["attributes"]["return_code"] = proc.returncode
     riemann_event["attributes"]["command"] = command_str
-    
+
     if options.debug:
         print riemann_event
 
