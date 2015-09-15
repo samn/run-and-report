@@ -1,11 +1,12 @@
 #! /usr/bin/env python
-import bernhard
-from optparse import OptionParser
 import os.path
 import socket
 import subprocess
 import sys
 import time
+from optparse import OptionParser
+
+import bernhard
 
 DEFAULT_TAGS = ['run-and-report']
 
@@ -58,6 +59,10 @@ if __name__ == "__main__":
     parser.add_option("--service", default=None, help="An optional service to the event. Defaults to the basename of the command that's run")
     parser.add_option("--debug", default=False, action='store_true', help="Output the event before it's sent to Riemann.")
     parser.add_option("--metric-from-stdout", default=False, action='store_true', help="Use stdout as the metric rather than the elapsed command walltime.")
+    parser.add_option("--state-from-stdout", default=False, action='store_true', help="Use stdout as the state rather than the elapsed command walltime.")
+    parser.add_option("--tcp", default=False, action='store_true', help="Use TCP transport instead of UDP.")
+    parser.add_option("--host", default=None, help="Specify hostname.")
+    parser.add_option("--omit-metric", default=False, action='store_true', help="Do not send the metric.")
 
     options, command = parser.parse_args()
     if not command:
@@ -82,24 +87,35 @@ if __name__ == "__main__":
     STDOUT >>>
     %s
     <<<
-
     STDERR >>>
     %s
     <<<
     """ % (stdout, stderr)
 
-    riemann = bernhard.Client(host=options.riemann_host, port=options.riemann_port, transport=bernhard.UDPTransport)
+    if options.tcp:
+        transport = bernhard.TCPTransport
+    else:
+        transport = bernhard.UDPTransport
+
+    riemann = bernhard.Client(host=options.riemann_host, port=options.riemann_port, transport=transport)
     riemann_event = {}
     riemann_event["service"] = service
-    riemann_event["state"]  = run_state(proc, state_table)
+    if options.state_from_stdout:
+        riemann_event["state"]  = stdout.strip()
+    else:
+        riemann_event["state"]  = run_state(proc, state_table)
     riemann_event["description"] = description
     if options.ttl:
         riemann_event["ttl"] = int(options.ttl)
-    riemann_event["host"]  = socket.gethostname()
-    if options.metric_from_stdout:
-        riemann_event["metric"] = float(stdout)
+    if options.host:
+        riemann_event["host"]  = options.host
     else:
-        riemann_event["metric"] = duration
+        riemann_event["host"]  = socket.gethostname()
+    if not options.omit_metric:
+        if options.metric_from_stdout:
+            riemann_event["metric"] = float(stdout)
+        else:
+            riemann_event["metric"] = duration
     riemann_event["tags"] = DEFAULT_TAGS + separate_from_commas(options.tags)
     riemann_event["attributes"] = {}
     riemann_event["attributes"]["return_code"] = proc.returncode
