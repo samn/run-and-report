@@ -20,6 +20,22 @@ def separate_from_commas(comma_str):
     else:
         return []
 
+def kv_array_to_dict(kv_pairs):
+    """
+    Takes an array of key=value formatted Strings
+    and returns a dict
+    """
+
+    pairs = {}
+
+    if kv_pairs:
+        for kv_string in kv_pairs:
+            kv = kv_string.split("=")
+            if len(kv) == 2:
+                pairs[kv[0]] = kv[1]
+
+    return pairs
+
 def parse_states(states_str):
     """
     Parses a string of state information for interpreting return codes.
@@ -63,6 +79,7 @@ if __name__ == "__main__":
     parser.add_option("--tcp", default=False, action='store_true', help="Use TCP transport instead of UDP.")
     parser.add_option("--host", default=None, help="Specify hostname.")
     parser.add_option("--omit-metric", default=False, action='store_true', help="Do not send the metric.")
+    parser.add_option("--attributes", default=None, help="Comma separated list of key=value attribute pairs. e.g. foo=bar,biz=baz")
 
     options, command = parser.parse_args()
     if not command:
@@ -98,26 +115,34 @@ if __name__ == "__main__":
         transport = bernhard.UDPTransport
 
     riemann = bernhard.Client(host=options.riemann_host, port=options.riemann_port, transport=transport)
+
     riemann_event = {}
     riemann_event["service"] = service
-    if options.state_from_stdout:
-        riemann_event["state"]  = stdout.strip()
-    else:
-        riemann_event["state"]  = run_state(proc, state_table)
     riemann_event["description"] = description
+
+    if options.state_from_stdout:
+        riemann_event["state"] = stdout.strip()
+    else:
+        riemann_event["state"] = run_state(proc, state_table)
+
     if options.ttl:
         riemann_event["ttl"] = int(options.ttl)
+
     if options.host:
-        riemann_event["host"]  = options.host
+        riemann_event["host"] = options.host
     else:
-        riemann_event["host"]  = socket.gethostname()
+        riemann_event["host"] = socket.gethostname()
+
     if not options.omit_metric:
         if options.metric_from_stdout:
             riemann_event["metric"] = float(stdout)
         else:
             riemann_event["metric"] = duration
+
     riemann_event["tags"] = DEFAULT_TAGS + separate_from_commas(options.tags)
-    riemann_event["attributes"] = {}
+
+    attribute_pairs = separate_from_commas(options.attributes)
+    riemann_event["attributes"] = kv_array_to_dict(attribute_pairs)
     riemann_event["attributes"]["return_code"] = proc.returncode
     riemann_event["attributes"]["command"] = command_str
 
