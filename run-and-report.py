@@ -5,6 +5,7 @@ import subprocess
 import sys
 import time
 from optparse import OptionParser
+from optparse import OptionGroup
 
 import bernhard
 
@@ -81,6 +82,12 @@ if __name__ == "__main__":
     parser.add_option("--omit-metric", default=False, action='store_true', help="Do not send the metric.")
     parser.add_option("--attributes", default=None, help="Comma separated list of key=value attribute pairs. e.g. foo=bar,biz=baz")
 
+    ssl_option_group = OptionGroup(parser, "SSL Options", "Setting all of these options will cause the connection to be created over SSL.")
+    ssl_option_group.add_option("--keyfile", default=None, help="Path to PKCS8 private key file in PEM format")
+    ssl_option_group.add_option("--certfile", default=None, help="Path to client certificate file in PEM format")
+    ssl_option_group.add_option("--cafile", default=None, help="Path to certificate authorities file in PEM format")
+    parser.add_option_group(ssl_option_group)
+
     options, command = parser.parse_args()
     if not command:
         print "Fatal: no command given"
@@ -109,12 +116,12 @@ if __name__ == "__main__":
     <<<
     """ % (stdout, stderr)
 
-    if options.tcp:
-        transport = bernhard.TCPTransport
+    if options.keyfile and options.certfile and options.cafile:
+        riemann = bernhard.SSLClient(host=options.riemann_host, port=options.riemann_port,
+            keyfile=options.keyfile, certfile=options.certfile, ca_certs=options.cafile)
     else:
-        transport = bernhard.UDPTransport
-
-    riemann = bernhard.Client(host=options.riemann_host, port=options.riemann_port, transport=transport)
+        riemann = bernhard.Client(host=options.riemann_host, port=options.riemann_port,
+            transport=bernhard.TCPTransport if options.tcp else bernhard.UDPTransport)
 
     riemann_event = {}
     riemann_event["service"] = service

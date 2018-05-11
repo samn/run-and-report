@@ -20,7 +20,25 @@ Options:
   --service=SERVICE     An optional service to the event. Defaults to the
                         basename of the command that's run
   --debug               Output the event before it's sent to Riemann.
-  --metric-from-stdout  Use stdout as the metric, rather than elapsed command walltime.
+  --metric-from-stdout  Use stdout as the metric rather than the elapsed
+                        command walltime.
+  --state-from-stdout   Use stdout as the state rather than the elapsed
+                        command walltime.
+  --tcp                 Use TCP transport instead of UDP.
+  --host=HOST           Specify hostname.
+  --omit-metric         Do not send the metric.
+  --attributes=ATTRIBUTES
+                        Comma separated list of key=value attribute pairs.
+                        e.g. foo=bar,biz=baz
+
+  SSL Options:
+    Setting all of these options will cause the connection to be created
+    over SSL.
+
+    --keyfile=KEYFILE   Path to PKCS8 private key file in PEM format
+    --certfile=CERTFILE
+                        Path to client certificate file in PEM format
+    --cafile=CAFILE     Path to certificate authorities file in PEM format
 ````
     
 `run-and-report.py` will run the command string and report that the event occurred.
